@@ -442,3 +442,4 @@ Built with:
 ---
 
 *"Nature has spent billions of years optimizing for efficiency. MNE learns from the master."*
+> **Songs listened during the making**: Nitro+ (Alvaro Diaz), Deja Vu (ROA, Hades66), Khé (Rauw Alejandro, Romeo Santos)
