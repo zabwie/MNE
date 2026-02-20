@@ -177,7 +177,7 @@ Where:
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/mne.git
+git clone https://github.com/zabwie/mne.git
 cd mne
 
 # Install dependencies
