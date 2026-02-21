@@ -189,35 +189,6 @@ class HomeostaticRegulator(nn.Module):
 
 
 class MNETopology(nn.Module):
-    """
-    Metabolic Neural Ecosystem Topology Manager.
-
-    Implements structural plasticity with:
-    - Neurogenesis (neuron splitting)
-    - Apoptosis (neuron death)
-    - Multi-scale homeostatic regulation
-    - Activity-dependent plasticity
-
-    Args:
-        max_neurons: Maximum number of neurons (default: 1000)
-        min_neurons: Minimum number of neurons (default: 10)
-        resource_high: High resource threshold for neurogenesis (default: 2.0)
-        resource_low: Low resource threshold for apoptosis (default: 0.1)
-        neurogenesis_rate: Maximum neurogenesis rate (default: 0.1)
-        apoptosis_rate: Maximum apoptosis rate (default: 0.1)
-        homeostatic_regulator: Homeostatic regulator instance
-        device: Device to place tensors on (default: 'cpu')
-
-    Example:
-        >>> topology = MNETopology(max_neurons=100)
-        >>> state = topology.get_initial_state(num_neurons=50)
-        >>> neuron_state = ...  # NeuronState instance
-        >>> synapse_state = ...  # SynapseState instance
-        >>> new_neuron_state, new_synapse_state, new_topology_state = topology.update(
-        ...     neuron_state, synapse_state, state
-        ... )
-    """
-
     def __init__(
         self,
         max_neurons: int = 1000,
@@ -246,15 +217,6 @@ class MNETopology(nn.Module):
         self.to(device)
 
     def get_initial_state(self, num_neurons: int) -> TopologyState:
-        """
-        Initialize topology state.
-
-        Args:
-            num_neurons: Initial number of neurons
-
-        Returns:
-            TopologyState: Initial topology state
-        """
         device = self.device
 
         return TopologyState(
@@ -269,16 +231,6 @@ class MNETopology(nn.Module):
     def check_neurogenesis(
         self, neuron_state: NeuronState, topology_state: TopologyState
     ) -> torch.Tensor:
-        """
-        Check which neurons should undergo neurogenesis.
-
-        Args:
-            neuron_state: Current neuron state
-            topology_state: Current topology state
-
-        Returns:
-            torch.Tensor: Boolean mask of neurons to split
-        """
         # Check resource level
         high_resource = neuron_state.resource > self.resource_high
 
@@ -299,16 +251,6 @@ class MNETopology(nn.Module):
     def check_apoptosis(
         self, neuron_state: NeuronState, topology_state: TopologyState
     ) -> torch.Tensor:
-        """
-        Check which neurons should undergo apoptosis.
-
-        Args:
-            neuron_state: Current neuron state
-            topology_state: Current topology state
-
-        Returns:
-            torch.Tensor: Boolean mask of neurons to kill
-        """
         # Check resource level
         low_resource = neuron_state.resource < self.resource_low
 
@@ -333,25 +275,6 @@ class MNETopology(nn.Module):
         topology_state: TopologyState,
         split_mask: torch.Tensor,
     ) -> Tuple[NeuronState, SynapseState, TopologyState]:
-        """
-        Apply neurogenesis (neuron splitting).
-
-        Args:
-            neuron_state: Current neuron state
-            synapse_state: Current synapse state
-            topology_state: Current topology state
-            split_mask: Boolean mask of neurons to split
-
-        Returns:
-            Tuple of updated states
-        """
-        # For simplicity, we'll implement a basic version
-        # In a full implementation, this would:
-        # 1. Create new neurons
-        # 2. Distribute resources
-        # 3. Copy and modify connections
-        # 4. Update topology state
-
         # Count unique neurons to split (across batch)
         num_to_split = split_mask.any(dim=0).sum().item()
 
@@ -373,18 +296,6 @@ class MNETopology(nn.Module):
         topology_state: TopologyState,
         death_mask: torch.Tensor,
     ) -> Tuple[NeuronState, SynapseState, TopologyState]:
-        """
-        Apply apoptosis (neuron death).
-
-        Args:
-            neuron_state: Current neuron state
-            synapse_state: Current synapse state
-            topology_state: Current topology state
-            death_mask: Boolean mask of neurons to kill
-
-        Returns:
-            Tuple of updated states
-        """
         # Count unique neurons to kill (across batch)
         num_to_kill = death_mask.any(dim=0).sum().item()
 
@@ -400,8 +311,6 @@ class MNETopology(nn.Module):
 
         # Aggregate death mask across batch to get neurons that are dead in any batch element
         neurons_dead_any_batch = death_mask.any(dim=0)  # (num_neurons,)
-
-        # Remove connections to/from dead neurons
         # Zero out weights for dead neurons (both incoming and outgoing)
         synapse_state.weights = synapse_state.weights * (
             ~neurons_dead_any_batch
@@ -474,15 +383,6 @@ class MNETopology(nn.Module):
         return neuron_state, synapse_state, topology_state
 
     def apply_homeostasis(self, neuron_state: NeuronState) -> NeuronState:
-        """
-        Apply homeostatic regulation.
-
-        Args:
-            neuron_state: Current neuron state
-
-        Returns:
-            NeuronState: Updated neuron state
-        """
         # Update threshold using homeostatic regulator
         new_threshold = self.homeostatic_regulator.update(
             neuron_state.activation, neuron_state.threshold, neuron_state.is_active
@@ -501,20 +401,6 @@ class MNETopology(nn.Module):
         apply_apoptosis: bool = True,
         apply_homeostasis: bool = True,
     ) -> Tuple[NeuronState, SynapseState, TopologyState]:
-        """
-        Update topology for one time step.
-
-        Args:
-            neuron_state: Current neuron state
-            synapse_state: Current synapse state
-            topology_state: Current topology state
-            apply_neurogenesis: Whether to apply neurogenesis (default: True)
-            apply_apoptosis: Whether to apply apoptosis (default: True)
-            apply_homeostasis: Whether to apply homeostasis (default: True)
-
-        Returns:
-            Tuple of updated states
-        """
         # Apply homeostasis
         if apply_homeostasis:
             neuron_state = self.apply_homeostasis(neuron_state)
@@ -538,63 +424,18 @@ class MNETopology(nn.Module):
         return neuron_state, synapse_state, topology_state
 
     def get_num_neurons(self, topology_state: TopologyState) -> int:
-        """
-        Get current number of neurons.
-
-        Args:
-            topology_state: Current topology state
-
-        Returns:
-            int: Number of neurons
-        """
         return topology_state.num_neurons
 
     def get_num_active(self, topology_state: TopologyState) -> int:
-        """
-        Get number of active neurons.
-
-        Args:
-            topology_state: Current topology state
-
-        Returns:
-            int: Number of active neurons
-        """
         return topology_state.num_active
 
     def get_neurogenesis_count(self, topology_state: TopologyState) -> int:
-        """
-        Get total neurogenesis events.
-
-        Args:
-            topology_state: Current topology state
-
-        Returns:
-            int: Number of neurogenesis events
-        """
         return topology_state.neurogenesis_count
 
     def get_apoptosis_count(self, topology_state: TopologyState) -> int:
-        """
-        Get total apoptosis events.
-
-        Args:
-            topology_state: Current topology state
-
-        Returns:
-            int: Number of apoptosis events
-        """
         return topology_state.apoptosis_count
 
     def get_topology_statistics(self, topology_state: TopologyState) -> dict:
-        """
-        Get topology statistics.
-
-        Args:
-            topology_state: Current topology state
-
-        Returns:
-            dict: Dictionary of topology statistics
-        """
         return {
             "num_neurons": topology_state.num_neurons,
             "num_active": topology_state.num_active,
