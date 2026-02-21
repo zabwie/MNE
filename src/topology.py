@@ -55,18 +55,6 @@ from .synapse import SynapseState
 
 @dataclass
 class TopologyState:
-    """
-    State container for network topology.
-
-    Attributes:
-        num_neurons: Current number of neurons
-        num_active: Number of active neurons
-        neuron_indices: Mapping from logical to physical neuron indices
-        neurogenesis_count: Number of neurogenesis events
-        apoptosis_count: Number of apoptosis events
-        homeostatic_state: State of homeostatic regulation
-    """
-
     num_neurons: int
     num_active: int
     neuron_indices: torch.Tensor
@@ -76,27 +64,6 @@ class TopologyState:
 
 
 class HomeostaticRegulator(nn.Module):
-    """
-    Multi-scale homeostatic regulator.
-
-    Implements homeostatic regulation at multiple time scales to maintain
-    stable network dynamics.
-
-    Args:
-        ultra_fast_rate: Ultra-fast homeostatic rate (5ms scale, default: 0.1)
-        fast_rate: Fast homeostatic rate (2s scale, default: 0.01)
-        medium_rate: Medium homeostatic rate (5min scale, default: 0.001)
-        slow_rate: Slow homeostatic rate (1hr scale, default: 0.0001)
-        target_activation: Target activation level (default: 0.5)
-        activation_tolerance: Tolerance for activation deviation (default: 0.1)
-        device: Device to place tensors on (default: 'cpu')
-
-    Example:
-        >>> regulator = HomeostaticRegulator()
-        >>> activation = torch.randn(32, 100)
-        >>> threshold = torch.zeros(32, 100)
-        >>> new_threshold = regulator.update(activation, threshold)
-    """
 
     def __init__(
         self,
@@ -125,22 +92,6 @@ class HomeostaticRegulator(nn.Module):
         threshold: torch.Tensor,
         is_active: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        """
-        Update homeostatic threshold.
-
-        Implements multi-scale homeostasis:
-        θ_i(t+1) = θ_i(t) + Σ_k ρ_k (a_i(t) - a_target)
-
-        where k indexes the different time scales.
-
-        Args:
-            activation: Current activation of shape (batch_size, num_neurons)
-            threshold: Current threshold of shape (batch_size, num_neurons)
-            is_active: Optional boolean mask of active neurons
-
-        Returns:
-            torch.Tensor: Updated threshold
-        """
         # Compute error from target
         error = activation - self.target_activation
 
@@ -174,15 +125,6 @@ class HomeostaticRegulator(nn.Module):
         return new_threshold
 
     def get_regulation_strength(self, activation: torch.Tensor) -> torch.Tensor:
-        """
-        Get the strength of homeostatic regulation needed.
-
-        Args:
-            activation: Current activation
-
-        Returns:
-            torch.Tensor: Regulation strength
-        """
         error = torch.abs(activation - self.target_activation)
         strength = error / self.activation_tolerance
         return torch.clamp(strength, min=0.0, max=1.0)
@@ -286,6 +228,7 @@ class MNETopology(nn.Module):
 
         # For now, just mark neurons as having undergone neurogenesis
         # In a full implementation, we'd actually create new neurons
+        # Will implement this sooner or later, just looking at other methods, this is tiring
 
         return neuron_state, synapse_state, topology_state
 
